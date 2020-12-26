@@ -123,17 +123,13 @@ void release() {
 void loop() {
   MPR121.updateAll();
 
-  // only make an action if we have one or fewer pins touched
-  // ignore multiple touches
-  if (MPR121.getNumTouches() <= 1) {
-    if (MPR121.isNewTouch(0)) {
-        digitalWrite(LED_BUILTIN, HIGH);
-        hug();
-    } else {
-      if (MPR121.isNewRelease(0)) {
-        digitalWrite(LED_BUILTIN, LOW);
-        release();
-      }
+  if (MPR121.isNewTouch(0)) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      hug();
+  } else {
+    if (MPR121.isNewRelease(0)) {
+      digitalWrite(LED_BUILTIN, LOW);
+      release();
     }
   }
 }
