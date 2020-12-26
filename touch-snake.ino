@@ -7,6 +7,9 @@
 
 *******************************************************************************/
 
+// compiler error handling
+#include "Compiler_Errors.h"
+
 // Servos!
 #include <Servo.h>
 
@@ -54,6 +57,34 @@ void setup() {
     sd.initErrorHalt();
   }
 
+  if (!MPR121.begin(MPR121_ADDR)) {
+    Serial.println("error setting up MPR121");
+    switch (MPR121.getError()) {
+      case NO_ERROR:
+        Serial.println("no error");
+        break;
+      case ADDRESS_UNKNOWN:
+        Serial.println("incorrect address");
+        break;
+      case READBACK_FAIL:
+        Serial.println("readback failure");
+        break;
+      case OVERCURRENT_FLAG:
+        Serial.println("overcurrent on REXT pin");
+        break;
+      case OUT_OF_RANGE:
+        Serial.println("electrode out of range");
+        break;
+      case NOT_INITED:
+        Serial.println("not initialised");
+        break;
+      default:
+        Serial.println("unknown error");
+        break;
+    }
+    while (1);
+  }
+
   MPR121.setInterruptPin(MPR121_INT);
 
   if (MPR121_DATASTREAM_ENABLE) {
@@ -92,13 +123,17 @@ void release() {
 void loop() {
   MPR121.updateAll();
 
-  if (MPR121.isNewTouch(0)) {
-      digitalWrite(LED_BUILTIN, HIGH);
-      hug();
-  } else {
-    if (MPR121.isNewRelease(0)) {
-      digitalWrite(LED_BUILTIN, LOW);
-      release();
+  // only make an action if we have one or fewer pins touched
+  // ignore multiple touches
+  if (MPR121.getNumTouches() <= 1) {
+    if (MPR121.isNewTouch(0)) {
+        digitalWrite(LED_BUILTIN, HIGH);
+        hug();
+    } else {
+      if (MPR121.isNewRelease(0)) {
+        digitalWrite(LED_BUILTIN, LOW);
+        release();
+      }
     }
   }
 }
